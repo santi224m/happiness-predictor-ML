@@ -32,7 +32,7 @@ def get_split_point(input_scores, happiness_scores):
       best_split_point = possible_split_point
       best_mean_low = mean_low
       best_mean_high = mean_high
-  return (best_split_point, lowest_err, best_mean_low, best_mean_high)
+  return (best_split_point, float(lowest_err), float(best_mean_low), float(best_mean_high))
 
 if __name__ == "__main__":
   # Load ess data
@@ -81,5 +81,5 @@ if __name__ == "__main__":
   split_point = 180
   net_usage = list(ess.loc[:, 'netustm'])
   happy = list(ess.loc[:, 'happy'])
-  split_point = get_split_point(net_usage, happy)
-  print('Best split point: ', split_point)
+  split_point, total_error, mean_low, mean_high = get_split_point(net_usage, happy)
+  print('Avg error: ', total_error / response_count)
