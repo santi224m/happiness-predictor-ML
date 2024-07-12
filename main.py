@@ -6,6 +6,34 @@ on a 1-10 scale given their responses on the European Social Survey.
 import pandas as pd
 import numpy as np
 
+def get_split_point(input_scores, happiness_scores):
+  """Calculate the best split point"""
+  lowest_err = float('inf')
+  best_split_point = None
+  best_mean_low = np.mean(happiness_scores)
+  best_mean_high = np.mean(happiness_scores)
+
+  # Possible split points are all values in input score
+  possible_split_points = set(input_scores)
+  for possible_split_point in possible_split_points:
+    happ_low_inputs = [happ for happ, input_score in zip(happiness_scores, input_scores) if input_score <= possible_split_point]
+    happ_high_inputs = [happ for happ, input_score in zip(happiness_scores, input_scores) if input_score > possible_split_point]
+
+    mean_low = np.mean(happ_low_inputs)
+    mean_high = np.mean(happ_high_inputs)
+
+    # Calcualte error
+    low_err = [abs(happ - mean_low) for happ in happ_low_inputs]
+    high_err = [abs(happ - mean_high) for happ in happ_high_inputs]
+
+    total_err = sum(low_err) + sum(high_err)
+    if total_err < lowest_err:
+      lowest_err = total_err
+      best_split_point = possible_split_point
+      best_mean_low = mean_low
+      best_mean_high = mean_high
+  return (best_split_point, lowest_err, best_mean_low, best_mean_high)
+
 if __name__ == "__main__":
   # Load ess data
   ess = pd.read_csv('data/ess.csv')
@@ -53,16 +81,5 @@ if __name__ == "__main__":
   split_point = 180
   net_usage = list(ess.loc[:, 'netustm'])
   happy = list(ess.loc[:, 'happy'])
-  happ_low_usage = [happ for happ, usage in zip(happy, net_usage) if usage <= split_point]
-  happ_high_usage = [happ for happ, usage in zip(happy, net_usage) if usage > split_point]
-
-  mean_low = np.mean(happ_low_usage)
-  mean_high = np.mean(happ_high_usage)
-
-  # Calcualte error
-  low_err = [abs(happ - mean_low) for happ in happ_low_usage]
-  high_err = [abs(happ - mean_high) for happ in happ_high_usage]
-
-  total_err = sum(low_err) + sum(high_err)
-  print('Error: ', total_err)
-  print('Avg error: ', total_err / response_count)
+  split_point = get_split_point(net_usage, happy)
+  print('Best split point: ', split_point)
