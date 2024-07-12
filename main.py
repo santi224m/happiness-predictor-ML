@@ -19,24 +19,25 @@ def get_split_point(input_scores, happiness_scores):
     happ_low_inputs = [happ for happ, input_score in zip(happiness_scores, input_scores) if input_score <= possible_split_point]
     happ_high_inputs = [happ for happ, input_score in zip(happiness_scores, input_scores) if input_score > possible_split_point]
 
-    mean_low = np.mean(happ_low_inputs)
-    mean_high = np.mean(happ_high_inputs)
+    if len(happ_low_inputs) > 0 and len(happ_high_inputs) > 0:
+      mean_low = np.mean(happ_low_inputs)
+      mean_high = np.mean(happ_high_inputs)
 
-    # Calcualte error
-    low_err = [abs(happ - mean_low) for happ in happ_low_inputs]
-    high_err = [abs(happ - mean_high) for happ in happ_high_inputs]
+      # Calcualte error
+      low_err = [abs(happ - mean_low) for happ in happ_low_inputs]
+      high_err = [abs(happ - mean_high) for happ in happ_high_inputs]
 
-    total_err = sum(low_err) + sum(high_err)
-    if total_err < lowest_err:
-      lowest_err = total_err
-      best_split_point = possible_split_point
-      best_mean_low = mean_low
-      best_mean_high = mean_high
+      total_err = sum(low_err) + sum(high_err)
+      if total_err < lowest_err:
+        lowest_err = total_err
+        best_split_point = possible_split_point
+        best_mean_low = mean_low
+        best_mean_high = mean_high
   return (best_split_point, float(lowest_err), float(best_mean_low), float(best_mean_high))
 
 if __name__ == "__main__":
   # Load ess data
-  ess = pd.read_csv('data/ess.csv')
+  ess = pd.read_csv('data/ess.csv', low_memory=False)
 
   # Choose which variables we will use for the predictor
   variables = [
@@ -78,8 +79,11 @@ if __name__ == "__main__":
   response_count = ess.shape[0]
 
   # Find predicted happiness by checking whether use uses more or less than 3 hours of internet per day
-  split_point = 180
   net_usage = list(ess.loc[:, 'netustm'])
   happy = list(ess.loc[:, 'happy'])
   split_point, total_error, mean_low, mean_high = get_split_point(net_usage, happy)
+  print(f'Split point: {split_point} minutes ({split_point / 60} hours)')
+  print('Mean happiness of people with low internet usage: ', mean_low)
+  print('Mean happiness of people with high internet usage: ', mean_high)
+  print('Total Error: ', total_error)
   print('Avg error: ', total_error / response_count)
