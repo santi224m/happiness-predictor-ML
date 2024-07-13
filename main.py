@@ -35,6 +35,27 @@ def get_split_point(input_scores, happiness_scores):
         best_mean_high = mean_high
   return (best_split_point, float(lowest_err), float(best_mean_low), float(best_mean_high))
 
+def generate_tree(happiness_scores, variables):
+  """Find the best metric to use for predicting happiness"""
+  best_metric = None
+  lowest_err = float('inf')
+  best_split_point = None
+  best_mean_low = np.mean(happiness_scores)
+  best_mean_high = np.mean(happiness_scores)
+
+  for var in variables:
+    input_scores = list(ess.loc[:, var])
+    split_point, total_error, mean_low, mean_high = get_split_point(input_scores, happiness_scores)
+    if total_error < lowest_err:
+      best_metric = var
+      lowest_err = total_error
+      best_split_point = split_point
+      best_mean_low = mean_low
+      best_mean_high = mean_high
+  
+  return (best_metric, best_split_point, lowest_err, best_mean_low, best_mean_high)
+    
+
 if __name__ == "__main__":
   # Load ess data
   ess = pd.read_csv('data/ess.csv', low_memory=False)
@@ -81,9 +102,7 @@ if __name__ == "__main__":
   # Find predicted happiness by checking whether use uses more or less than 3 hours of internet per day
   net_usage = list(ess.loc[:, 'netustm'])
   happy = list(ess.loc[:, 'happy'])
-  split_point, total_error, mean_low, mean_high = get_split_point(net_usage, happy)
-  print(f'Split point: {split_point} minutes ({split_point / 60} hours)')
-  print('Mean happiness of people with low internet usage: ', mean_low)
-  print('Mean happiness of people with high internet usage: ', mean_high)
-  print('Total Error: ', total_error)
-  print('Avg error: ', total_error / response_count)
+  # best_metric, best_split_point, lowest_err, best_mean_low, best_mean_high = generate_tree(happy, variables)
+  res = generate_tree(happy, variables)
+  print(res)
+  print(res[2] / response_count)
